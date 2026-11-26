@@ -1,15 +1,20 @@
+
 name: Z-Internet Android APK
 
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
+      - master
     paths:
-      - 'Z_Internet_Browser_Advanced_1_0_Project.zip'
+      - 'Z_Internet_Browser_*.zip'
       - '.github/workflows/android-build.yml'
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -31,15 +36,26 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Extract project ZIP
+      - name: Find and Extract Latest ZIP
         run: |
-          mkdir project
-          unzip -q Z_Internet_Browser_Advanced_1_0_2_Kotlin_Fixes.zip -d project
+          ZIP_FILE=$(find . -maxdepth 1 -type f -name 'Z_Internet_Browser_*.zip' | sort -V | tail -n 1)
+
+          if [ -z "$ZIP_FILE" ]; then
+            echo "Browser ZIP not found!"
+            exit 1
+          fi
+
+          echo "Selected ZIP: $ZIP_FILE"
+          mkdir -p project
+          unzip -q "$ZIP_FILE" -d project
 
       - name: Locate Gradle project
         run: |
           SETTINGS=$(find project -type f \( -name settings.gradle -o -name settings.gradle.kts \) | head -n 1)
-          test -n "$SETTINGS"
+          if [ -z "$SETTINGS" ]; then
+            echo "Gradle project not found!"
+            exit 1
+          fi
           echo "PROJECT_DIR=$(dirname "$SETTINGS")" >> "$GITHUB_ENV"
 
       - name: Build debug APK
@@ -53,4 +69,3 @@ jobs:
           name: Z-Internet-Android-APK
           path: project/**/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
-          
