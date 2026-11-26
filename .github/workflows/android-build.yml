@@ -34,7 +34,7 @@ jobs:
       - name: Extract project ZIP
         run: |
           mkdir project
-          unzip -q Z_Internet_Browser_Advanced_1_0_Project.zip -d project
+          unzip -q Z_Internet_Browser_Advanced_1_0_1_CompileFix.zip -d project
 
       - name: Locate Gradle project
         run: |
